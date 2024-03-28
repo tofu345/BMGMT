@@ -1,0 +1,5 @@
+node_modules/
+db/schema.sql
+.env
+sqlc/
+tmp/
