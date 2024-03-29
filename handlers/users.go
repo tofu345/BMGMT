@@ -11,35 +11,22 @@ import (
 	"github.com/tofu345/BMGMT/utils"
 )
 
-type UserDisplay struct {
-	Email       string `json:"email"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	IsSuperuser bool   `json:"is_superuser"`
-}
-
 func GetUsers(c echo.Context) error {
-	user := c.Get("user")
-	if !user.(sqlc.User).IsSuperuser.Bool {
-		return c.String(http.StatusUnauthorized, constants.MissingPerms)
-	}
-
 	users, err := db.Q.ListUsers(db.Ctx)
 	if err != nil {
 		return err
 	}
 
-	out := make([]UserDisplay, len(users))
-	for i, u := range users {
-		out[i] = UserDisplay{
-			Email:       u.Email,
-			FirstName:   u.FirstName,
-			LastName:    u.LastName,
-			IsSuperuser: u.IsSuperuser.Bool,
-		}
+	if len(users) == 0 {
+		return c.JSONBlob(http.StatusOK, []byte("[]"))
 	}
+	return c.JSON(http.StatusOK, users)
+}
 
-	return c.JSON(http.StatusOK, out)
+type UserDisplay struct {
+	Email       string
+	FirstName   string
+	LastName    string
 }
 
 func GetUserInfo(c echo.Context) error {
@@ -48,7 +35,6 @@ func GetUserInfo(c echo.Context) error {
 		Email:       user.Email,
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
-		IsSuperuser: user.IsSuperuser.Bool,
 	})
 }
 
@@ -88,7 +74,6 @@ func CreateUser(c echo.Context) error {
 		Email:       newUser.Email,
 		FirstName:   newUser.FirstName,
 		LastName:    newUser.LastName,
-		IsSuperuser: newUser.IsSuperuser.Bool,
 	})
 }
 
@@ -106,7 +91,7 @@ func GenerateTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	user, err := utils.GetUserByEmail(data.Email)
+	user, err := db.Q.GetUserByEmail(db.Ctx, data.Email)
 	if err != nil {
 		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
 	}
@@ -119,7 +104,6 @@ func GenerateTokenPair(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-
 	refresh, err := utils.RefreshToken(user)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -145,7 +129,6 @@ func RegenerateAccessToken(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-
 	if _, exists := payload["ref"]; !exists {
 		return c.String(http.StatusBadRequest, constants.InvalidToken)
 	}
@@ -153,7 +136,7 @@ func RegenerateAccessToken(c echo.Context) error {
 	email := payload["email"]
 	switch email := email.(type) {
 	case string:
-		user, err := utils.GetUserByEmail(email)
+		user, err := db.Q.GetUserByEmail(db.Ctx, email)
 		if err != nil {
 			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
 		}
@@ -162,7 +145,6 @@ func RegenerateAccessToken(c echo.Context) error {
 		if err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
-
 		return c.JSON(http.StatusBadRequest, map[string]string{"access": access})
 	}
 

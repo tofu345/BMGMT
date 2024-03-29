@@ -1,18 +1,47 @@
 package utils
 
 import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
 	"github.com/tofu345/BMGMT/constants"
-	"github.com/tofu345/BMGMT/db"
 	"github.com/tofu345/BMGMT/sqlc"
 )
 
-func GetUserByEmail(email string) (sqlc.User, error) {
-	users, err := db.Q.GetUserByEmail(db.Ctx, email)
-	if err != nil {
-		return sqlc.User{}, err
+func AdminRequired(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user := c.Get("user")
+		if !user.(sqlc.User).IsSuperuser.Bool {
+			return c.String(http.StatusUnauthorized, constants.MissingPerms)
+		}
+
+		return next(c)
 	}
-	if len(users) == 0 {
-		return sqlc.User{}, constants.ErrNotFound
+}
+
+func LoginRequired(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Get("user") == nil {
+			return c.String(http.StatusUnauthorized, constants.Unauthorized)
+		}
+
+		return next(c)
 	}
-	return users[0], nil
+}
+
+func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		token := c.Request().Header.Get("Authorization")
+		if token == "" {
+			return next(c)
+		}
+
+		user, err := jwtAuth(token)
+		if err != nil {
+			// log.Println(err.Error())
+			return next(c)
+		}
+		c.Set("user", user)
+		return next(c)
+	}
 }
