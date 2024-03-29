@@ -108,7 +108,7 @@ func GenerateTokenPair(c echo.Context) error {
 
 	user, err := utils.GetUserByEmail(data.Email)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
 	}
 
 	if !utils.CheckPasswordHash(data.Password, user.Password) {
@@ -155,7 +155,7 @@ func RegenerateAccessToken(c echo.Context) error {
 	case string:
 		user, err := utils.GetUserByEmail(email)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
 		}
 
 		access, err := utils.AccessToken(user)
