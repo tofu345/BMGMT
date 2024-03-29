@@ -18,14 +18,17 @@ var (
 	ErrMissingToken = errors.New("missing token")
 	ErrInvalidToken = errors.New(InvalidToken)
 	ErrInvalidData  = errors.New(InvalidData)
+	ErrExpiredToken = errors.New("expired token")
+	ErrNotFound     = errors.New(NotFound)
 )
 
 const (
 	JWT_ISSUER = "BMGMT"
 
-	Unauthorized = "unauthorized"
-	MissingPerms = "missing permissions"
-	InvalidData  = "invalid data"
-	BadRequest   = "bad request"
-	InvalidToken = "invalid token"
+	MissingPerms  = "missing permissions"
+	Unauthorized  = "unauthorized"
+	InvalidData   = "invalid data"
+	BadRequest    = "bad request"
+	InvalidToken  = "invalid token"
+	NotFound      = "object not found"
 )

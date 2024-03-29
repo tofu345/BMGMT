@@ -9,14 +9,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/tofu345/BMGMT/constants"
-	"github.com/tofu345/BMGMT/db"
 	"github.com/tofu345/BMGMT/sqlc"
 )
 
 func LoginRequired(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if c.Get("user") == nil {
-			return c.String(http.StatusUnauthorized, constants.MissingPerms)
+			return c.String(http.StatusUnauthorized, constants.Unauthorized)
 		}
 
 		return next(c)
@@ -32,7 +31,8 @@ func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		user, err := jwtAuth(token)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			// log.Println(err.Error())
+			return next(c)
 		}
 		c.Set("user", user)
 		return next(c)
@@ -57,7 +57,7 @@ func jwtAuth(token string) (sqlc.User, error) {
 	email := payload["email"]
 	switch email := email.(type) {
 	case string:
-		user, err := db.Q.GetUserByEmail(db.Ctx, email)
+		user, err := GetUserByEmail(email)
 		if err != nil {
 			return sqlc.User{}, err
 		}

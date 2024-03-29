@@ -106,7 +106,7 @@ func GenerateTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	user, err := db.Q.GetUserByEmail(db.Ctx, data.Email)
+	user, err := utils.GetUserByEmail(data.Email)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -153,9 +153,9 @@ func RegenerateAccessToken(c echo.Context) error {
 	email := payload["email"]
 	switch email := email.(type) {
 	case string:
-		user, err := db.Q.GetUserByEmail(db.Ctx, email)
+		user, err := utils.GetUserByEmail(email)
 		if err != nil {
-			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 
 		access, err := utils.AccessToken(user)

@@ -12,4 +12,7 @@ func registerRoutes(e *echo.Echo) {
 	e.POST("/users", handlers.CreateUser)
 	e.POST("/token", handlers.GenerateTokenPair)
 	e.POST("/token/refresh", handlers.RegenerateAccessToken)
+
+	e.GET("/locations", handlers.GetLocations)
+	e.GET("/locations/:loc_id", handlers.GetLocationRooms)
 }
