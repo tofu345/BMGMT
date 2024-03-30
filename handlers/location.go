@@ -61,7 +61,7 @@ func GetLocationInfo(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, struct {
 		sqlc.Location
-		Rooms []RoomDisplay
+		Rooms []RoomDisplay `json:"rooms"`
 	}{Location: loc, Rooms: rooms})
 }
 

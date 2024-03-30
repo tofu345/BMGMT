@@ -1,6 +1,9 @@
 package utils
 
-import "github.com/jackc/pgx/v5/pgconn"
+import (
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/tofu345/BMGMT/constants"
+)
 
 func PrettyDbError(err error) string {
 	switch e := err.(type) {
@@ -8,5 +11,8 @@ func PrettyDbError(err error) string {
 		return e.Message
 	}
 
+	if err.Error() == "no rows in result set" {
+		return constants.NotFound
+	}
 	return err.Error()
 }

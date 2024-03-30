@@ -24,17 +24,17 @@ func GetUsers(c echo.Context) error {
 }
 
 type UserDisplay struct {
-	Email       string
-	FirstName   string
-	LastName    string
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 func GetUserInfo(c echo.Context) error {
 	user := c.Get("user").(sqlc.User)
 	return c.JSON(http.StatusOK, UserDisplay{
-		Email:       user.Email,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
 	})
 }
 
@@ -71,9 +71,9 @@ func CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, UserDisplay{
-		Email:       newUser.Email,
-		FirstName:   newUser.FirstName,
-		LastName:    newUser.LastName,
+		Email:     newUser.Email,
+		FirstName: newUser.FirstName,
+		LastName:  newUser.LastName,
 	})
 }
 

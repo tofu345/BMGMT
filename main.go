@@ -4,26 +4,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	echoLog "github.com/labstack/gommon/log"
 	"github.com/tofu345/BMGMT/db"
+	"github.com/tofu345/BMGMT/scripts"
 	"github.com/tofu345/BMGMT/sqlc"
 	"github.com/tofu345/BMGMT/utils"
 )
-
-type CustomValidator struct {
-	validator *validator.Validate
-}
-
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
-		return utils.FmtValidationErrs(err)
-	}
-	return nil
-}
 
 func main() {
 	err := godotenv.Load()
@@ -38,9 +27,22 @@ func main() {
 	defer db.Conn.Close(db.Ctx)
 	db.Q = sqlc.New(db.Conn)
 
-	e := echo.New()
-	e.Validator = &CustomValidator{validator: validator.New()}
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "shell":
+			if len(os.Args) >= 2 {
+				scripts.Shell(os.Args[2:]...)
+			} else {
+				scripts.Shell()
+			}
+		default:
+			log.Fatalf("Unknown verb: %v", os.Args[1])
+		}
+		return
+	}
 
+	e := echo.New()
+	e.Validator = &utils.Validator
 	e.Use(utils.JwtMiddleware)
 
 	registerRoutes(e)
