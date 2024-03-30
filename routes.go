@@ -7,7 +7,7 @@ import (
 )
 
 func registerRoutes(e *echo.Echo) {
-	e.GET("/users", handlers.GetUsers, utils.LoginRequired)
+	e.GET("/users", handlers.GetUsers, utils.LoginRequired, utils.AdminRequired)
 	e.GET("/user", handlers.GetUserInfo, utils.LoginRequired)
 	e.POST("/users", handlers.CreateUser)
 	e.POST("/token", handlers.GenerateTokenPair)
