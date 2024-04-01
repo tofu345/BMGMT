@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoLog "github.com/labstack/gommon/log"
 	"github.com/tofu345/BMGMT/db"
 	"github.com/tofu345/BMGMT/scripts"
@@ -43,6 +45,10 @@ func main() {
 
 	e := echo.New()
 	e.Validator = &utils.Validator
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: strings.Split(os.Getenv("ALLOWED_ORIGINS"), ","),
+		AllowHeaders: []string{"Authorization", "Content-Type"},
+	}))
 	e.Use(utils.JwtMiddleware)
 
 	registerRoutes(e)

@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/tofu345/BMGMT/db"
 	"github.com/tofu345/BMGMT/handlers"
 	"github.com/tofu345/BMGMT/sqlc"
@@ -20,11 +19,11 @@ type Script struct {
 }
 
 var (
-	loggedInAdmin sqlc.User
+	loggedInSuperUser sqlc.User
 
 	r       = bufio.NewReader(os.Stdin)
 	scripts = []Script{
-		{"create_admin", "Create admin user", createAdmin},
+		{"create_superuser", "Create superuser", createSuperUser},
 	}
 )
 
@@ -70,15 +69,15 @@ func Shell(args ...string) {
 	}
 }
 
-func createAdmin() {
-	fmt.Println(">> Create admin user")
+func createSuperUser() {
+	fmt.Println(">> Create superuser")
 
 	first_name := getUserInput("> First Name: ")
 	last_name := getUserInput("> Last Name: ")
 	email := getUserInput("> Email: ")
 	password := getAndComparePasswords()
 
-	user := handlers.UserData{
+	user := handlers.UserDTO{
 		FirstName: first_name,
 		LastName:  last_name,
 		Password:  password,
@@ -101,11 +100,11 @@ func createAdmin() {
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		Password:    hash,
-		IsSuperuser: pgtype.Bool{Bool: true, Valid: true},
+		IsSuperuser: true,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("! Admin %v created\n", user.Email)
+	fmt.Printf("! Superuser %v created\n", user.Email)
 }

@@ -28,6 +28,12 @@ SELECT * FROM location;
 -- name: GetLocation :one
 SELECT * FROM location WHERE id = $1 LIMIT 1;
 
+-- name: GetLocationAdmins :many 
+SELECT users.email 
+FROM loc_admin 
+    JOIN users ON loc_admin.user_id = users.id
+WHERE loc_admin.location_id = $1;
+
 -- name: GetLocationRooms :many 
 SELECT room.name, users.email, users.first_name, users.last_name
 FROM location
@@ -41,4 +47,8 @@ RETURNING *;
 
 -- name: CreateRoom :one
 INSERT INTO room (name, location_id) VALUES ($1, $2)
+RETURNING *;
+
+-- name: CreateLocationAdmin :one
+INSERT INTO loc_admin (user_id, location_id) VALUES ($1, $2)
 RETURNING *;

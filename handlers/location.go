@@ -25,9 +25,9 @@ func GetLocations(c echo.Context) error {
 }
 
 type RoomDisplay struct {
-	Name string `json:"name"`
-	// TenancyEndDate time.Time
+	Name string       `json:"name"`
 	User *UserDisplay `json:"user"`
+	// TenancyEndDate time.Time
 }
 
 func GetLocationInfo(c echo.Context) error {
@@ -47,6 +47,11 @@ func GetLocationInfo(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
+	admins, err := db.Q.GetLocationAdmins(db.Ctx, id)
+	if err != nil {
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+	}
+
 	rooms := make([]RoomDisplay, len(data))
 	for i, v := range data {
 		rooms[i] = RoomDisplay{Name: v.Name, User: nil}
@@ -61,17 +66,18 @@ func GetLocationInfo(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, struct {
 		sqlc.Location
-		Rooms []RoomDisplay `json:"rooms"`
-	}{Location: loc, Rooms: rooms})
+		Rooms  []RoomDisplay `json:"rooms"`
+		Admins []string      `json:"admins"`
+	}{Location: loc, Rooms: rooms, Admins: admins})
 }
 
-type LocationData struct {
+type LocationDTO struct {
 	Name    string `json:"name" validate:"required"`
 	Address string `json:"address" validate:"required"`
 }
 
 func CreateLocation(c echo.Context) error {
-	data := new(LocationData)
+	data := new(LocationDTO)
 	if err := c.Bind(data); err != nil {
 		return c.String(http.StatusBadRequest, constants.InvalidData)
 	}
@@ -90,12 +96,12 @@ func CreateLocation(c echo.Context) error {
 	return c.JSON(http.StatusCreated, loc)
 }
 
-type RoomData struct {
+type RoomDTO struct {
 	Name string `validate:"required"`
 }
 
 func CreateRoom(c echo.Context) error {
-	data := new(RoomData)
+	data := new(RoomDTO)
 	if err := c.Bind(data); err != nil {
 		return c.String(http.StatusBadRequest, constants.InvalidData)
 	}
@@ -123,4 +129,55 @@ func CreateRoom(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, RoomDisplay{Name: room.Name, User: nil})
+}
+
+func CreateLocAdmin(c echo.Context) error {
+	data := new(UserDTO)
+	if err := c.Bind(data); err != nil {
+		return c.String(http.StatusBadRequest, constants.InvalidData)
+	}
+
+	id, err := strconv.Atoi(c.Param("loc_id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, constants.BadRequest)
+	}
+	loc_id := int64(id)
+
+	var user sqlc.User
+	if data.Email != "" {
+		user, err = db.Q.GetUserByEmail(db.Ctx, data.Email)
+		if err != nil {
+			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+		}
+	} else {
+		if err := c.Validate(data); err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+
+		hash, err := utils.HashPassword(data.Password)
+		if err != nil {
+			return c.String(http.StatusBadRequest, "error hashing password")
+		}
+
+		user, err = db.Q.CreateUser(db.Ctx, sqlc.CreateUserParams{
+			Email:       data.Email,
+			FirstName:   data.FirstName,
+			LastName:    data.LastName,
+			Password:    hash,
+			IsSuperuser: false,
+		})
+		if err != nil {
+			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+		}
+	}
+
+	admin, err := db.Q.CreateLocationAdmin(db.Ctx, sqlc.CreateLocationAdminParams{
+		UserID:     user.ID,
+		LocationID: loc_id,
+	})
+	if err != nil {
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+	}
+
+	return c.JSON(http.StatusCreated, admin)
 }

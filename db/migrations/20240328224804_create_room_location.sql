@@ -1,11 +1,11 @@
 -- migrate:up
-CREATE TABLE IF NOT EXISTS location (
+CREATE TABLE location (
     id bigserial PRIMARY KEY,
     name varchar(32) NOT NULL,
     address varchar(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS room (
+CREATE TABLE room (
     id bigserial PRIMARY KEY,
     name varchar(32) NOT NULL,
     location_id bigint REFERENCES location (id) ON DELETE CASCADE,
@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS room (
 );
 
 -- migrate:down
-DROP TABLE IF EXISTS location, room CASCADE;
+DROP TABLE location, room CASCADE;
 

@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"github.com/tofu345/BMGMT/constants"
 	"github.com/tofu345/BMGMT/db"
@@ -38,7 +37,7 @@ func GetUserInfo(c echo.Context) error {
 	})
 }
 
-type UserData struct {
+type UserDTO struct {
 	Email     string `json:"email" validate:"required,email,max=30"`
 	FirstName string `json:"first_name" validate:"required,min=3,max=20"`
 	LastName  string `json:"last_name" validate:"required,min=3,max=20"`
@@ -46,7 +45,7 @@ type UserData struct {
 }
 
 func CreateUser(c echo.Context) error {
-	user := new(UserData)
+	user := new(UserDTO)
 	if err := c.Bind(user); err != nil {
 		return c.String(http.StatusBadRequest, constants.InvalidData)
 	}
@@ -64,7 +63,7 @@ func CreateUser(c echo.Context) error {
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		Password:    hash,
-		IsSuperuser: pgtype.Bool{Bool: false, Valid: true},
+		IsSuperuser: false,
 	})
 	if err != nil {
 		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
@@ -77,13 +76,13 @@ func CreateUser(c echo.Context) error {
 	})
 }
 
-type GenTokenData struct {
+type GenTokenDTO struct {
 	Email    string `json:"email" validate:"email,required"`
 	Password string `json:"password" validate:"required"`
 }
 
 func GenerateTokenPair(c echo.Context) error {
-	data := new(GenTokenData)
+	data := new(GenTokenDTO)
 	if err := c.Bind(data); err != nil {
 		return c.String(http.StatusBadRequest, constants.BadRequest)
 	}
@@ -112,12 +111,12 @@ func GenerateTokenPair(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"access": access, "refresh": refresh})
 }
 
-type RegenTokenData struct {
+type RegenTokenDTO struct {
 	RefreshToken string `json:"refresh" validate:"required"`
 }
 
 func RegenerateAccessToken(c echo.Context) error {
-	data := new(RegenTokenData)
+	data := new(RegenTokenDTO)
 	if err := c.Bind(data); err != nil {
 		return c.String(http.StatusBadRequest, constants.BadRequest)
 	}

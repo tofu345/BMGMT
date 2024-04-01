@@ -36,7 +36,11 @@ func FmtValidationErrs(err error) ValidationErrs {
 	case validator.ValidationErrors:
 		err_map := ValidationErrs{Errors: make(map[string]any, len(errs))}
 		for _, e := range errs {
-			err_map.Errors[e.Field()] = fmt.Sprintf("%v %v", e.Tag(), e.Param())
+			if e.Param() != "" {
+				err_map.Errors[e.Field()] = fmt.Sprintf("%v %v", e.Tag(), e.Param())
+			} else {
+				err_map.Errors[e.Field()] = e.Tag()
+			}
 		}
 		return err_map
 	}
