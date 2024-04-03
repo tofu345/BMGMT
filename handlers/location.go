@@ -131,7 +131,7 @@ func CreateRoom(c echo.Context) error {
 	return c.JSON(http.StatusCreated, RoomDisplay{Name: room.Name, User: nil})
 }
 
-func CreateLocAdmin(c echo.Context) error {
+func CreateLocationAdmin(c echo.Context) error {
 	data := new(UserDTO)
 	if err := c.Bind(data); err != nil {
 		return c.String(http.StatusBadRequest, constants.InvalidData)

@@ -25,10 +25,11 @@ var (
 const (
 	JWT_ISSUER = "BMGMT"
 
-	MissingPerms  = "missing permissions"
-	Unauthorized  = "unauthorized"
-	InvalidData   = "invalid data"
-	BadRequest    = "bad request"
-	InvalidToken  = "invalid token"
-	NotFound      = "object not found"
+	MissingPerms = "missing permissions"
+	Unauthorized = "unauthorized"
+	InvalidData  = "invalid data"
+	BadRequest   = "bad request"
+	InvalidToken = "invalid token"
+	NotFound     = "object not found"
+	DBNotFound   = "no rows in result set"
 )

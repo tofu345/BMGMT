@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,7 @@ func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		user, err := jwtAuth(token)
 		if err != nil {
-			// log.Println(err.Error())
+			log.Println(err.Error())
 			return next(c)
 		}
 		c.Set("user", user)

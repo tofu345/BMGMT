@@ -11,7 +11,6 @@ import (
 	"github.com/tofu345/BMGMT/sqlc"
 )
 
-
 func jwtAuth(token string) (sqlc.User, error) {
 	if token == "" {
 		return sqlc.User{}, constants.ErrMissingToken
@@ -45,7 +44,7 @@ func defaultJwtClaims(user sqlc.User) jwt.MapClaims {
 	return jwt.MapClaims{
 		"iss":   constants.JWT_ISSUER,
 		"iat":   time_now.Unix(),
-		"exp":   time_now.Add(time.Hour).Unix(),
+		"exp":   time_now.Add(24 * time.Hour).Unix(),
 		"email": user.Email,
 	}
 }

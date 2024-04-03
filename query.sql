@@ -15,12 +15,19 @@ INSERT INTO users (email, first_name, last_name, PASSWORD, is_superuser)
     VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: UpdateUsers :one
-UPDATE users SET
-    email = $2,
-    first_name = $3,
-    last_name = $4
-WHERE id = $1 RETURNING *;
+-- name: GetUserLocAdmins :many
+SELECT location.*
+FROM users
+    JOIN loc_admin ON loc_admin.user_id = users.id
+    JOIN location ON location.id = loc_admin.location_id
+WHERE users.id = $1;
+
+-- -- name: UpdateUsers :one
+-- UPDATE users SET
+--     email = $2,
+--     first_name = $3,
+--     last_name = $4
+-- WHERE id = $1 RETURNING *;
 
 -- name: GetLocations :many
 SELECT * FROM location;

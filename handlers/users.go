@@ -23,17 +23,26 @@ func GetUsers(c echo.Context) error {
 }
 
 type UserDisplay struct {
-	Email     string `json:"email"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email     string         `json:"email"`
+	FirstName string         `json:"first_name"`
+	LastName  string         `json:"last_name"`
+	Location  []sqlc.Location `json:"admin_locations,omitempty"`
 }
 
 func GetUserInfo(c echo.Context) error {
 	user := c.Get("user").(sqlc.User)
+	locations, err := db.Q.GetUserLocAdmins(db.Ctx, user.ID)
+	if err != nil {
+		if err.Error() != constants.DBNotFound {
+			return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+		}
+	}
+
 	return c.JSON(http.StatusOK, UserDisplay{
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
+		Location:  locations,
 	})
 }
 

@@ -11,7 +11,7 @@ func PrettyDbError(err error) string {
 		return e.Message
 	}
 
-	if err.Error() == "no rows in result set" {
+	if err.Error() == constants.DBNotFound {
 		return constants.NotFound
 	}
 	return err.Error()
