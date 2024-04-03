@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -22,12 +22,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.Conn, err = pgx.Connect(db.Ctx, os.Getenv("DATABASE_URL"))
+	db.ConnPool, err = pgxpool.New(db.Ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Conn.Close(db.Ctx)
-	db.Q = sqlc.New(db.Conn)
+	db.Q = sqlc.New(db.ConnPool)
 
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
