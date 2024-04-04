@@ -25,8 +25,9 @@ func GetLocations(c echo.Context) error {
 }
 
 type RoomDisplay struct {
+	ID   int64        `json:"id"`
 	Name string       `json:"name"`
-	User *UserDisplay `json:"user"`
+	User *UserDisplay `json:"user,omitempty"`
 	// TenancyEndDate time.Time
 }
 
@@ -54,7 +55,7 @@ func GetLocationInfo(c echo.Context) error {
 
 	rooms := make([]RoomDisplay, len(data))
 	for i, v := range data {
-		rooms[i] = RoomDisplay{Name: v.Name, User: nil}
+		rooms[i] = RoomDisplay{ID: v.ID, Name: v.Name, User: nil}
 		if v.Email.Valid {
 			rooms[i].User = &UserDisplay{
 				Email:     v.Email.String,
@@ -180,4 +181,81 @@ func CreateLocationAdmin(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, admin)
+}
+
+type LocationIssueDTO struct {
+	RoomID    int64          `json:"room_id" validate:"required"`
+	IssueType sqlc.IssueType `json:"issue_type" validate:"required"`
+	Info      string         `json:"info" validate:"required"`
+}
+
+func CreateLocationIssue(c echo.Context) error {
+	data := new(LocationIssueDTO)
+	if err := c.Bind(data); err != nil {
+		return c.String(http.StatusBadRequest, constants.InvalidData)
+	}
+	if err := c.Validate(data); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	_, err := db.Q.GetRoom(db.Ctx, data.RoomID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err, "room"))
+	}
+
+	issue, err := db.Q.CreateLocationIssue(db.Ctx, sqlc.CreateLocationIssueParams{
+		RoomID:    data.RoomID,
+		IssueType: data.IssueType,
+		Info:      data.Info,
+		Resolved:  false,
+	})
+	if err != nil {
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+	}
+
+	return c.JSON(http.StatusCreated, issue)
+}
+
+type LocationIssueDisplay struct {
+	IssueType sqlc.IssueType `json:"issue_type"`
+	Info      string         `json:"info"`
+	Room      RoomDisplay    `json:"room"`
+	Resolved  bool           `json:"resolved"`
+}
+
+func GetLocationIssues(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("loc_id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, constants.BadRequest)
+	}
+	loc_id := int64(id)
+
+	issues, err := db.Q.GetLocationIssues(db.Ctx, loc_id)
+	if err != nil {
+		return c.String(http.StatusBadRequest, utils.PrettyDbError(err))
+	}
+	if issues == nil {
+		return c.JSONBlob(http.StatusOK, []byte("[]"))
+	}
+
+	out := make([]LocationIssueDisplay, len(issues))
+	for i, v := range issues {
+		out[i] = LocationIssueDisplay{
+			IssueType: v.IssueType,
+			Info:      v.Info,
+			Resolved:  v.Resolved,
+			Room: RoomDisplay{
+				ID:   v.Room.ID,
+				Name: v.Room.Name,
+				User: &UserDisplay{
+					Email:     v.Email,
+					FirstName: v.FirstName,
+					LastName:  v.LastName,
+					Location:  nil,
+				},
+			},
+		}
+	}
+
+	return c.JSON(http.StatusOK, out)
 }

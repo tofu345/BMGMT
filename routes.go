@@ -18,4 +18,6 @@ func registerRoutes(e *echo.Echo) {
 	e.POST("/locations/:loc_id/admin", handlers.CreateLocationAdmin, utils.SuperUserRequired)
 	e.GET("/locations/:loc_id", handlers.GetLocationInfo)
 	e.POST("/locations/:loc_id/rooms", handlers.CreateRoom, utils.LoginRequired)
+	e.GET("/locations/:loc_id/issues", handlers.GetLocationIssues, utils.LocationAdminRequired)
+	e.POST("/locations/:loc_id/issues", handlers.CreateLocationIssue, utils.LoginRequired)
 }

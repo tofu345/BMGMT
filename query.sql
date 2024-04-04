@@ -42,11 +42,15 @@ FROM loc_admin
 WHERE loc_admin.location_id = $1;
 
 -- name: GetLocationRooms :many 
-SELECT room.name, users.email, users.first_name, users.last_name
+SELECT room.id, room.name, users.email, users.first_name, users.last_name
 FROM location
     JOIN room ON room.location_id = location.id
     LEFT JOIN users ON room.tenant_id = users.id
 WHERE location.id = $1;
+
+-- name: GetRoom :one
+SELECT room.* FROM room 
+WHERE room.id = $1;
 
 -- name: CreateLocation :one
 INSERT INTO location (name, address) VALUES ($1, $2)
@@ -59,3 +63,16 @@ RETURNING *;
 -- name: CreateLocationAdmin :one
 INSERT INTO loc_admin (user_id, location_id) VALUES ($1, $2)
 RETURNING *;
+
+-- name: GetLocationIssues :many
+SELECT users.email, users.first_name, users.last_name, sqlc.embed(room), 
+    location_issues.issue_type, location_issues.info, location_issues.resolved
+FROM location_issues
+    JOIN room ON room.id = location_issues.room_id
+    JOIN users ON room.tenant_id = users.id
+    JOIN location ON location.id = room.location_id
+WHERE location.id = $1;
+
+-- name: CreateLocationIssue :one
+INSERT INTO location_issues (room_id, issue_type, info, resolved)
+VALUES ($1, $2, $3, $4) RETURNING *;

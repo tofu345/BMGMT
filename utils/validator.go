@@ -2,12 +2,22 @@ package utils
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/go-playground/validator"
 )
 
 func init() {
 	Validator = CustomValidator{validator: validator.New()}
+	Validator.validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+
+		return name
+	})
 }
 
 var Validator CustomValidator
