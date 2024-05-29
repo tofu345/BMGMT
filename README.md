@@ -1,3 +1,3 @@
 # BMGMT
 
-Building Guest Management. a website for managing guests in buildings ***obviously***
+Building Management. a website for managing buildings ***obviously***
